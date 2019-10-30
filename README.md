@@ -7,6 +7,7 @@ The demo uses [vue-mapbox](https://soal.github.io/vue-mapbox) and has the follow
 -   Change the map style
 -   Change marker color
 -   Use a custom marker
+-   Using map and marker methods and events
 -   Interaction with markers from a list
 
 You need to use your own Mapbox Access Token and change it in the .env file
