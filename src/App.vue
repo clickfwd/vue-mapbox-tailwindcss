@@ -7,7 +7,7 @@
 			<div class="w-full md:w-1/2 p-4">
 				<button
 					@click="addMarkers"
-					class="m-1 btn btn-blue w-full sm:w-auto"
+					class="m-1 btn btn-blue w-full lg:w-auto"
 					:disabled="buttonDisabled"
 				>
 					Add Markers
@@ -15,7 +15,7 @@
 
 				<button
 					@click="removeMarkers"
-					class="m-1 btn btn-blue w-full sm:w-auto"
+					class="m-1 btn btn-blue w-full lg:w-auto"
 					:disabled="buttonDisabled"
 				>
 					Remove Markers
@@ -23,7 +23,7 @@
 
 				<button
 					@click="changeMapStyle"
-					class="m-1 btn btn-blue w-full sm:w-auto"
+					class="m-1 btn btn-blue w-full lg:w-auto"
 					:disabled="buttonDisabled"
 				>
 					Change Map Style
@@ -31,7 +31,7 @@
 
 				<button
 					@click="toggleMarkerColor"
-					class="m-1 btn btn-blue w-full sm:w-auto"
+					class="m-1 btn btn-blue w-full lg:w-auto"
 					:disabled="buttonDisabled"
 				>
 					Change Marker Color
@@ -39,16 +39,21 @@
 
 				<button
 					@click="useCustomMarker = !useCustomMarker"
-					class="m-1 btn btn-blue w-full sm:w-auto"
+					class="m-1 btn btn-blue w-full lg:w-auto"
 				>
 					Use Custom Marker
 				</button>
 			</div>
-			<div class="w-full md:w-1/2 flex items-end mb-4 justify-center">
-				Showing {{ payload.length }} markers
+			<div
+				class="px-4 w-full md:w-1/2 flex items-center mb-6 justify-end flex-col lg:flex-row lg:mb-0 lg:justify-between"
+			>
+				<div ref="mapSearch" class="w-full lg:w-1/2 order-last lg:order-first"></div>
+				<div class="mb-4 w-full lg:w-auto lg:mt-0 flex justify-center lg:justify-end">
+					There are {{ payload.length }} markers
+				</div>
 			</div>
 		</div>
-		<div class="map flex flex-col flex-1 md:flex-row justify-center w-full p-4">
+		<div class="map flex flex-col flex-1 md:flex-row justify-center w-full">
 			<div
 				class="flex flex-row w-full h-24 py-4 px-2 mb-4 bg-gray-100 flex-grow flex-shrink-0 overflow-x-auto h-6 md:h-auto md:overflow-y-auto md:flex-col md:w-1/2 md:mb-0 "
 			>
@@ -104,7 +109,7 @@
 							<span
 								class="text-xs inline-flex items-center justify-center p-3 mr-2 w-4 h-4 rounded-full"
 								:class="{
-									'bg-teal-800 text-teal-100': markerColor !== 'blue',
+									'bg-teal-800 text-teal-100': markerColor == 'blue',
 									'bg-red-800 text-red-100': markerColor == 'red',
 								}"
 							>
@@ -122,6 +127,7 @@
 <script>
 import Mapbox from 'mapbox-gl';
 import { MglMap, MglNavigationControl, MglMarker, MglPopup } from 'vue-mapbox';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 
 export default {
 	components: {
@@ -136,19 +142,21 @@ export default {
 			defaultZoom: 12,
 			mapCenter: [-71.038887, 42.364506],
 			mapStyle: 'mapbox://styles/mapbox/light-v9',
-			// mapbox://styles/mapbox/streets-v11
 			markerColor: 'blue',
 			useCustomMarker: false,
 			buttonDisabled: false,
 			counter: 0,
 			selectedMarker: null,
 			payload: [],
+			// Geocoder
+			address: '',
 		};
 	},
 	methods: {
 		onMapLoaded(event) {
 			this.map = event.map;
 			this.addMarkers();
+			this.addGeocoder();
 		},
 		toggleMarkerColor() {
 			this.markerColor = this.markerColor == 'blue' ? 'red' : 'blue';
@@ -176,7 +184,6 @@ export default {
 		addMarkers() {
 			this.buttonDisabled = true;
 			const bounds = this.map.getBounds();
-			console.log(this.map.getCenter());
 			let lat_min = bounds.getSouthWest().lat,
 				lat_range = bounds.getNorthEast().lat - lat_min,
 				lng_min = bounds.getSouthWest().lng,
@@ -207,6 +214,21 @@ export default {
 				inline: 'center',
 			});
 		},
+		addGeocoder() {
+			this.geocoder = new MapboxGeocoder({
+				accessToken: this.mapbox.accessToken,
+				maboxgl: this.mapbox,
+				marker: false,
+			});
+			this.$refs.mapSearch.appendChild(this.geocoder.onAdd(this.map));
+
+			let $this = this;
+			this.geocoder.on('result', function() {
+				$this.$nextTick(() => {
+					$this.addMarkers();
+				});
+			});
+		},
 	},
 	created() {
 		this.map = null;
@@ -218,5 +240,11 @@ export default {
 <style>
 .map {
 	height: 500px;
+}
+@media screen and (min-width: 640px) {
+	.mapboxgl-ctrl-geocoder {
+		width: 100% !important;
+		max-width: 100% !important;
+	}
 }
 </style>

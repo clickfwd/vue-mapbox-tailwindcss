@@ -9,6 +9,7 @@ The demo uses [vue-mapbox](https://soal.github.io/vue-mapbox) and has the follow
 -   Use a custom marker
 -   Using map and marker methods and events
 -   Interaction with markers from a list
+-   Address search with the Mapxbox geocoder using an input outside the map
 
 You need to use your own Mapbox Access Token and change it in the .env file
 
